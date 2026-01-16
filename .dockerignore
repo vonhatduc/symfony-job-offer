@@ -1,0 +1,36 @@
+# Docker files
+.git
+.gitignore
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Symfony
+var/cache/*
+var/log/*
+var/sessions/*
+
+# Vendor (will be installed inside container)
+# vendor/
+
+# Node
+node_modules
+
+# Tests
+.phpunit.result.cache
+phpunit.xml
+
+# Documentation
+docs/
+README.md
+CHANGELOG.md
