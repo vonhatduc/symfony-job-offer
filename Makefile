@@ -56,7 +56,7 @@ db-reset: ## Reset database (drop, create, migrate)
 	docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
 
 jwt-keys: ## Generate JWT keys
-	docker compose exec php php bin/console lexik:jwt:generate-keypair --overwrite
+	docker compose exec php php bin/console lexik:jwt:generate-keypair --overwrite --no-interaction
 
 app-setup: ## Run initial app setup (seed data)
 	docker compose exec php php bin/console app:setup

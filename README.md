@@ -35,6 +35,7 @@ The recommended way to run this project is using Docker.
 1. **Setup Environment**
    ```bash
    cp .env.example .env
+   cp .env.test.example .env.test
    ```
 
 2. **Build and Start**
@@ -44,15 +45,25 @@ The recommended way to run this project is using Docker.
    ```
    *Note: This builds images, installs dependencies, sets up the database, generates JWT keys, and seeds data.*
    
-   OR Manually:
-   ```bash
-   docker compose build
-   docker compose up -d
-   docker compose exec php composer install
-   docker compose exec php php bin/console doctrine:database:create
-   docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
-   docker compose exec php php bin/console lexik:jwt:generate-keypair --skip-if-exists
-   ```
+    OR Manually:
+    ```bash
+    # 1. Build and start containers
+    docker compose build --no-cache
+    docker compose up -d
+
+    # 2. Install PHP dependencies
+    docker compose exec php composer install
+
+    # 3. Setup database and migrations
+    docker compose exec php php bin/console doctrine:database:create --if-not-exists
+    docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
+
+    # 4. Generate JWT keys
+    docker compose exec php php bin/console lexik:jwt:generate-keypair --overwrite --no-interaction
+
+    # 5. Seed initial data
+    docker compose exec php php bin/console app:setup
+    ```
 
 3. **Access the Application**
    - **API Documentation**: [http://localhost:8080/api](http://localhost:8080/api)
@@ -60,13 +71,15 @@ The recommended way to run this project is using Docker.
 
 ### Useful Commands
 
-| Command | Description |
-|---------|-------------|
-| `make up` / `make down` | Start/Stop containers |
-| `make logs` | View application logs |
-| `make shell` | Access the PHP container shell |
-| `make test` | Run the test suite |
-| `make db-reset` | Reset database (drop, create, migrate) |
+| Feature | Make Command | Manual Docker Command |
+|---------|--------------|-----------------------|
+| **Setup** | `make first-install` | *(See steps above)* |
+| **Start/Stop** | `make up` / `make down` | `docker compose up -d` / `down` |
+| **Logs** | `make logs` | `docker compose logs -f` |
+| **PHP Shell** | `make shell` | `docker compose exec php bash` |
+| **Test Suite** | `make test` | *(See Testing section)* |
+| **DB Reset** | `make db-reset` | `docker compose exec php php bin/console doctrine:database:drop --force...` |
+| **JWT Keys** | `make jwt-keys` | `docker compose exec php php bin/console lexik:jwt:generate-keypair...` |
 
 ---
 
@@ -114,11 +127,24 @@ API Docs: `http://127.0.0.1:8000/api`
 Run all 49+ unit and functional tests:
 
 **With Docker:**
+Using Make:
 ```bash
 make test
 ```
 
-**Locally:**
+Manually:
+```bash
+# 1. Create test database
+docker compose exec -e DATABASE_URL="mysql://root:root@mysql:3306/symfony_db?serverVersion=8.0&charset=utf8mb4" php php bin/console --env=test doctrine:database:create --if-not-exists
+
+# 2. Run migrations for test environment
+docker compose exec -e DATABASE_URL="mysql://root:root@mysql:3306/symfony_db?serverVersion=8.0&charset=utf8mb4" php php bin/console --env=test doctrine:migrations:migrate --no-interaction
+
+# 3. Execute PHPUnit
+docker compose exec -e DATABASE_URL="mysql://root:root@mysql:3306/symfony_db?serverVersion=8.0&charset=utf8mb4" php php bin/phpunit
+```
+
+**Locally (No Docker):**
 ```bash
 php bin/phpunit
 ```
@@ -165,6 +191,7 @@ The following features were deliberately omitted to maintain focus on core backe
 
 **Infrastructure & DevOps:**
 - **CI/CD Pipeline**: Automated testing and deployment (GitHub Actions, GitLab CI).
+- **Error Monitoring**: Real-time error tracking and performance monitoring (Sentry).
 - **Observability**: Structured logging (Monolog), metrics (Prometheus), distributed tracing (OpenTelemetry).
 
 **Performance & Scalability:**
